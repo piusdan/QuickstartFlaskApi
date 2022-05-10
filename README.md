@@ -134,3 +134,9 @@ flask db upgrade # If running locally without Docker
 To apply the migration.
 
 For a full migration command reference, run `docker-compose run --rm manage db --help`.
+
+
+References
+---
+
+* [Flask Cookiecutter Application](https://github.com/cookiecutter-flask/cookiecutter-flask?msclkid=9f34f3d4d04c11ecbde3ee653129ed2c)
