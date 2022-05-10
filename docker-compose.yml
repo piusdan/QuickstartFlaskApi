@@ -1,0 +1,71 @@
+version: "3.6"
+
+x-build-args: &build_args
+  INSTALL_PYTHON_VERSION: "3.10"
+
+x-default-volumes: &default_volumes
+  volumes:
+    - ./:/www/root
+services:
+  postgres:
+    image: postgres:13-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=apps
+      - POSTGRES_PASSWORD=apps_pass
+      - POSTGRES_DB=flask_api
+  flask-dev:
+    build:
+      context: .
+      target: development
+      args:
+        <<: *build_args
+    image: "flaskapi-development"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: 'postgresql://apps:apps_pass@postgres:5432/flask_api'
+    ports:
+      - "5000:5000"
+    <<: *default_volumes
+
+  flask-prod:
+    build:
+      context: .
+      target: production
+      args:
+        <<: *build_args
+    image: "flaskapi-production"
+    ports:
+      - "8080:5000"
+    depends_on:
+      - postgres
+    environment:
+      FLASK_ENV: production
+      FLASK_DEBUG: 0
+      LOG_LEVEL: info
+      GUNICORN_WORKERS: 4
+      DATABASE_URL: 'postgresql://apps:apps_pass@postgres:5432/flask_api'
+    <<: *default_volumes
+
+  manage:
+    build:
+      context: .
+      target: development
+      args:
+        <<: *build_args
+    entrypoint: flask
+    depends_on:
+      - postgres
+    environment:
+      FLASK_ENV: production
+      FLASK_DEBUG: 0
+      DATABASE_URL: 'postgresql://apps:apps_pass@postgres:5432/flask_api'
+    image: "flaskapi-manage"
+    stdin_open: true
+    tty: true
+    <<: *default_volumes
+
+volumes:
+  postgres_data:
